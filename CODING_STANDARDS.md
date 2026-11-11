@@ -8,7 +8,7 @@ Each function does one thing, and its name says what. A function that collects, 
 
 ## One package per responsibility
 
-Each package owns one job: running external commands (`runner`), listing applications (`apps`), grouping them (`inventory`), formatting the file (`render`), writing it (`store`), reading the config (`config`). A package that needs the outside world (a command, the clock, the home folder) receives it as a parameter or an interface, so its tests can pass a fake.
+Each package owns one job: running external commands (`runner`), listing applications (`apps`), listing Homebrew packages (`brew`), grouping them (`inventory`), formatting the file (`render`), writing it (`store`), reading the config (`config`). A package that needs the outside world (a command, the clock, the home folder) receives it as a parameter or an interface, so its tests can pass a fake.
 
 ## Layout
 

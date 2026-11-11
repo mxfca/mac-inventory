@@ -38,10 +38,10 @@ func TestCollectKeepsApplicationsFolderAndClassifiesSource(t *testing.T) {
 		t.Errorf("ran %s %v", r.name, r.args)
 	}
 	want := []apps.App{
-		{Name: "Claude", Version: "5.1231.0"},
-		{Name: "WhatsApp", Version: "26.44.72", AppStore: true},
-		{Name: "Firefox", Version: "159.0.1"},
-		{Name: "Keynote", Version: "15.2.1", AppStore: true},
+		{Name: "Claude", Version: "5.1231.0", Bundle: "Claude.app"},
+		{Name: "WhatsApp", Version: "26.44.72", Bundle: "WhatsApp.app", AppStore: true},
+		{Name: "Firefox", Version: "159.0.1", Bundle: "Firefox.app"},
+		{Name: "Keynote", Version: "15.2.1", Bundle: "Keynote Creator Studio.app", AppStore: true},
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %+v\nwant %+v", got, want)
@@ -59,7 +59,7 @@ func TestCollectDropsAppleAppsInApplicationsFolder(t *testing.T) {
 		t.Fatalf("Collect: %v", err)
 	}
 
-	want := []apps.App{{Name: "Zoom"}}
+	want := []apps.App{{Name: "Zoom", Bundle: "zoom.us.app"}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %+v, want %+v", got, want)
 	}

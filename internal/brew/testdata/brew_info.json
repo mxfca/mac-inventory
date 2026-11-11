@@ -1,0 +1,171 @@
+{
+  "formulae": [
+    {
+      "name": "gh",
+      "full_name": "gh",
+      "tap": "homebrew/core",
+      "versions": {
+        "stable": "2.103.3",
+        "head": "HEAD",
+        "bottle": true
+      },
+      "installed": [
+        {
+          "version": "2.103.3",
+          "installed_on_request": true,
+          "installed_as_dependency": null,
+          "time": 1793381865
+        }
+      ]
+    },
+    {
+      "name": "libyaml",
+      "full_name": "libyaml",
+      "tap": "homebrew/core",
+      "versions": {
+        "stable": "0.2.5",
+        "head": null,
+        "bottle": true
+      },
+      "installed": [
+        {
+          "version": "0.2.5",
+          "installed_on_request": false,
+          "installed_as_dependency": null,
+          "time": 1794366644
+        }
+      ]
+    },
+    {
+      "name": "pre-commit",
+      "full_name": "pre-commit",
+      "tap": "homebrew/core",
+      "versions": {
+        "stable": "4.7.0",
+        "head": "HEAD",
+        "bottle": true
+      },
+      "installed": [
+        {
+          "version": "4.7.0_2",
+          "installed_on_request": true,
+          "installed_as_dependency": null,
+          "time": 1794366647
+        }
+      ]
+    }
+  ],
+  "casks": [
+    {
+      "token": "renamed-example",
+      "full_token": "renamed-example",
+      "tap": "homebrew/cask",
+      "name": [
+        "Renamed Example"
+      ],
+      "version": "1.0",
+      "installed": "1.0",
+      "artifacts": [
+        {
+          "app": [
+            "Example Installer.app"
+          ],
+          "target": "/Applications/Example.app"
+        }
+      ]
+    },
+    {
+      "token": "bruno",
+      "full_token": "bruno",
+      "tap": "homebrew/cask",
+      "name": [
+        "Bruno"
+      ],
+      "version": "4.3.0",
+      "installed": "4.3.0",
+      "artifacts": [
+        {
+          "app": [
+            "Bruno.app"
+          ],
+          "target": "/Applications/Bruno.app"
+        },
+        {
+          "zap": "..."
+        }
+      ]
+    },
+    {
+      "token": "claude",
+      "full_token": "claude",
+      "tap": "homebrew/cask",
+      "name": [
+        "Claude"
+      ],
+      "version": "5.1231.0,4948659bec3fefa3bbcc6a838aaba8823c8cc485",
+      "installed": "4.4212.0,cbfe3c56d49c49332ad5a9588303c9dbc70a5e7f",
+      "artifacts": [
+        {
+          "uninstall": "..."
+        },
+        {
+          "app": [
+            "Claude.app"
+          ],
+          "target": "/Applications/Claude.app"
+        },
+        {
+          "zap": "..."
+        }
+      ]
+    },
+    {
+      "token": "codex",
+      "full_token": "codex",
+      "tap": "homebrew/cask",
+      "name": [
+        "Codex"
+      ],
+      "version": "0.167.1",
+      "installed": "0.166.0",
+      "artifacts": [
+        {
+          "binary": [
+            "bin/codex"
+          ],
+          "target": "/opt/homebrew/bin/codex"
+        },
+        {
+          "generate_completions_from_executable": "..."
+        },
+        {
+          "zap": "..."
+        }
+      ]
+    },
+    {
+      "token": "creality-print",
+      "full_token": "creality-print",
+      "tap": "homebrew/cask",
+      "name": [
+        "Creality Print"
+      ],
+      "version": "7.3.1.6378",
+      "installed": "7.3.0.6157",
+      "artifacts": [
+        {
+          "uninstall": "..."
+        },
+        {
+          "app": [
+            "Creality Print.app"
+          ],
+          "target": "/Applications/Creality Print.app"
+        },
+        {
+          "zap": "..."
+        }
+      ]
+    }
+  ]
+}

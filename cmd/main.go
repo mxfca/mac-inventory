@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mxfca/mac-inventory/internal/apps"
+	"github.com/mxfca/mac-inventory/internal/brew"
 	"github.com/mxfca/mac-inventory/internal/config"
 	"github.com/mxfca/mac-inventory/internal/inventory"
 	"github.com/mxfca/mac-inventory/internal/render"
@@ -56,8 +57,13 @@ func run(args []string, stderr io.Writer) int {
 		log.Error("collecting applications", "err", err)
 		return 1
 	}
-	inv := inventory.New(found)
-	log.Info("collected", "app_store", len(inv.AppStore), "other", len(inv.Other))
+	pkgs, err := brew.Collect(runner.Exec{})
+	if err != nil {
+		log.Error("collecting brew packages", "err", err)
+		return 1
+	}
+	inv := inventory.New(found, pkgs)
+	log.Info("collected", "brew", len(inv.Brew), "app_store", len(inv.AppStore), "other", len(inv.Other))
 
 	if err := store.Write(dir, render.Markdown(inv, collectedAt)); err != nil {
 		log.Error("writing inventory", "err", err)

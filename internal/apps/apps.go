@@ -4,6 +4,7 @@ package apps
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/mxfca/mac-inventory/internal/runner"
@@ -13,6 +14,7 @@ import (
 type App struct {
 	Name     string
 	Version  string // empty when system_profiler does not report one
+	Bundle   string // file name in /Applications, like "Firefox.app"
 	AppStore bool
 }
 
@@ -41,7 +43,7 @@ func Collect(r runner.Runner) ([]App, error) {
 		if !strings.HasPrefix(a.Path, "/Applications/") || a.ObtainedFrom == "apple" {
 			continue
 		}
-		apps = append(apps, App{Name: a.Name, Version: a.Version, AppStore: a.ObtainedFrom == "mac_app_store"})
+		apps = append(apps, App{Name: a.Name, Version: a.Version, Bundle: filepath.Base(a.Path), AppStore: a.ObtainedFrom == "mac_app_store"})
 	}
 	return apps, nil
 }
