@@ -1,0 +1,10 @@
+version: "2"
+
+linters:
+  # Keeps the default linters (govet included) and adds gosec.
+  enable:
+    - gosec
+
+formatters:
+  enable:
+    - gofmt
