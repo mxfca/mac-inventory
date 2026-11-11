@@ -1,4 +1,4 @@
-// Package config reads the destination folder from ~/.mac-inventory.
+// Package config reads and writes the destination folder in ~/.mac-inventory.
 package config
 
 import (
@@ -27,4 +27,25 @@ func Read(home string) (string, error) {
 		return "", fmt.Errorf("destination not configured: %q in %s is not an absolute path", dir, path)
 	}
 	return dir, nil
+}
+
+// Write saves dir as the destination folder in home/.mac-inventory.
+// A relative path or a folder that does not exist is refused and the file is left untouched.
+func Write(home, dir string) error {
+	if !filepath.IsAbs(dir) {
+		return fmt.Errorf("%q is not an absolute path", dir)
+	}
+	info, err := os.Stat(dir)
+	if err != nil {
+		return fmt.Errorf("destination folder: %w", err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("%q is not a folder", dir)
+	}
+	path := filepath.Join(home, FileName)
+	if err := os.WriteFile(path, []byte(dir+"\n"), 0o600); err != nil {
+		return err
+	}
+	// WriteFile only applies the mode when it creates the file.
+	return os.Chmod(path, 0o600)
 }

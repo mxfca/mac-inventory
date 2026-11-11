@@ -4,6 +4,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -27,6 +28,7 @@ func run(args []string, stderr io.Writer) int {
 	flags := flag.NewFlagSet("mac-inventory", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	showLogs := flags.Bool("show-logs", false, "print logs to stderr")
+	path := flags.String("path", "", "save `folder` as the destination and collect into it")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -44,6 +46,13 @@ func run(args []string, stderr io.Writer) int {
 	if err != nil {
 		log.Error("home folder not found", "err", err)
 		return 1
+	}
+	if pathGiven(flags, "path") {
+		if err := config.Write(home, *path); err != nil {
+			_, _ = fmt.Fprintln(stderr, "mac-inventory: --path:", err)
+			return 1
+		}
+		log.Info("destination saved", "dir", *path)
 	}
 	dir, err := config.Read(home)
 	if err != nil {
@@ -72,6 +81,13 @@ func run(args []string, stderr io.Writer) int {
 	}
 	log.Info("inventory written", "file", store.FileName)
 	return 0
+}
+
+// pathGiven tells --path "" (refused later by config) from no --path at all.
+func pathGiven(flags *flag.FlagSet, name string) bool {
+	given := false
+	flags.Visit(func(f *flag.Flag) { given = given || f.Name == name })
+	return given
 }
 
 // warn shows the notification; if it fails there is nothing left to do but log it.
