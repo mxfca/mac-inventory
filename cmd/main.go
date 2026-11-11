@@ -13,6 +13,7 @@ import (
 	"github.com/mxfca/mac-inventory/internal/brew"
 	"github.com/mxfca/mac-inventory/internal/config"
 	"github.com/mxfca/mac-inventory/internal/inventory"
+	"github.com/mxfca/mac-inventory/internal/notify"
 	"github.com/mxfca/mac-inventory/internal/render"
 	"github.com/mxfca/mac-inventory/internal/runner"
 	"github.com/mxfca/mac-inventory/internal/store"
@@ -47,6 +48,7 @@ func run(args []string, stderr io.Writer) int {
 	dir, err := config.Read(home)
 	if err != nil {
 		log.Error("reading destination", "err", err)
+		warn(log, "destination not configured: set the folder in ~/.mac-inventory")
 		return 1
 	}
 	log.Info("destination", "dir", dir)
@@ -65,8 +67,16 @@ func run(args []string, stderr io.Writer) int {
 
 	if err := store.Write(dir, render.Markdown(inv, collectedAt), len(inv.Failures()) == 0, collectedAt); err != nil {
 		log.Error("writing inventory", "err", err)
+		warn(log, "could not write the inventory: "+notify.Cause(err))
 		return 1
 	}
 	log.Info("inventory written", "file", store.FileName)
 	return 0
+}
+
+// warn shows the notification; if it fails there is nothing left to do but log it.
+func warn(log *slog.Logger, cause string) {
+	if err := notify.Show(runner.Exec{}, "mac-inventory", cause); err != nil {
+		log.Error("showing notification", "err", err)
+	}
 }
