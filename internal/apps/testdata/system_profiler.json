@@ -1,0 +1,78 @@
+{
+  "SPApplicationsDataType": [
+    {
+      "_name": "Claude",
+      "arch_kind": "arch_arm",
+      "lastModified": "2026-11-03T10:08:00Z",
+      "obtained_from": "identified_developer",
+      "path": "/Applications/Claude.app",
+      "signed_by": [
+        "Developer ID Application: Anthropic PBC (Q6L2SF6YDW)",
+        "Developer ID Certification Authority",
+        "Apple Root CA"
+      ],
+      "version": "5.1231.0"
+    },
+    {
+      "_name": "WhatsApp",
+      "arch_kind": "arch_arm_i64",
+      "lastModified": "2026-11-11T00:38:49Z",
+      "obtained_from": "mac_app_store",
+      "path": "/Applications/WhatsApp.app",
+      "signed_by": [
+        "Apple Mac OS Application Signing",
+        "Apple Worldwide Developer Relations Certification Authority",
+        "Apple Root CA"
+      ],
+      "version": "26.44.72"
+    },
+    {
+      "_name": "Firefox",
+      "arch_kind": "arch_arm_i64",
+      "info": "Firefox 159.0.1",
+      "lastModified": "2026-11-07T06:09:56Z",
+      "obtained_from": "identified_developer",
+      "path": "/Applications/Firefox.app",
+      "signed_by": [
+        "Developer ID Application: Mozilla Corporation (43AQ936H96)",
+        "Developer ID Certification Authority",
+        "Apple Root CA"
+      ],
+      "version": "159.0.1"
+    },
+    {
+      "_name": "Autodesk Fusion",
+      "arch_kind": "arch_other",
+      "lastModified": "2026-10-25T01:59:10Z",
+      "obtained_from": "unknown",
+      "path": "/Users/maxx/Applications/Autodesk Fusion.app",
+      "version": "2706.1.14"
+    },
+    {
+      "_name": "Keynote",
+      "arch_kind": "arch_arm_i64",
+      "lastModified": "2026-09-03T16:42:09Z",
+      "obtained_from": "mac_app_store",
+      "path": "/Applications/Keynote Creator Studio.app",
+      "signed_by": [
+        "Apple Mac OS Application Signing",
+        "Apple Worldwide Developer Relations Certification Authority",
+        "Apple Root CA"
+      ],
+      "version": "15.2.1"
+    },
+    {
+      "_name": "Calculator",
+      "arch_kind": "arch_arm_i64",
+      "lastModified": "2026-07-22T21:57:28Z",
+      "obtained_from": "apple",
+      "path": "/System/Applications/Calculator.app",
+      "signed_by": [
+        "macOS Software Signing",
+        "Apple Code Signing Certification Authority",
+        "Apple Root CA"
+      ],
+      "version": "12.0"
+    }
+  ]
+}

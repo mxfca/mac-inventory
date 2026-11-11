@@ -1,6 +1,57 @@
 # mac-inventory
 
-## Required binaries
+A Go program that, every Sunday at 12:00, writes the list of applications installed on this Mac (name, version and source: `brew`, `App Store` or `outro`) to a Markdown file, so they can be reinstalled on a new machine.
+
+## Install
+
+```sh
+./install.sh
+```
+
+The first time, it asks for the destination folder (an absolute path to a folder that already exists) and saves it in `~/.mac-inventory`. It then builds the binary into `~/.local/bin/mac-inventory` and loads the `com.mxfca.mac-inventory` launch agent. If the Mac is asleep at the scheduled time, the collection runs when it wakes up.
+
+Run `./install.sh` again after changing the code to rebuild and reload the agent. It keeps the folder already saved in `~/.mac-inventory`.
+
+## Uninstall
+
+```sh
+./uninstall.sh
+```
+
+It unloads the agent and deletes the `.plist`, the binary and `~/.mac-inventory`. The inventory and its backups are not touched. A new install asks for the destination folder again.
+
+## Change the destination folder
+
+```sh
+mac-inventory --path /absolute/path/to/folder
+```
+
+It saves the folder in `~/.mac-inventory` and runs a collection into it right away. A relative path or a folder that does not exist is refused, and `~/.mac-inventory` stays as it was.
+
+## Run by hand
+
+```sh
+mac-inventory --show-logs
+```
+
+It does the same collection as the weekly run, overwrites the inventory, and prints the logs to the screen. Without `--show-logs`, nothing is logged anywhere. `--show-logs` and `--path` are the only options.
+
+## Where the inventory is
+
+In the destination folder, as `inventario-mac.md`. Its frontmatter says when the collection ran (`coletado_em`) and whether it was complete (`coleta: completa` or `parcial`); on a partial collection, `falhas` says which source failed and why.
+
+When a collection is partial, the previous inventory is first copied to `inventario-mac-<date>-<time>.md` in the same folder. The backups pile up while collections stay partial and are deleted by the first complete one.
+
+## Notifications
+
+A macOS notification means nothing was written:
+
+- **Destination not configured:** `~/.mac-inventory` is missing or does not hold an absolute path. Run `mac-inventory --path <folder>`.
+- **Could not write the inventory:** the notification gives the cause, for example the destination folder does not exist (OneDrive not mounted) or there is no permission. The previous inventory is left untouched.
+
+## Development
+
+### Required binaries
 
 Every commit runs through [pre-commit](https://pre-commit.com) hooks. They need these tools, all installed with Homebrew:
 
@@ -16,7 +67,7 @@ Every commit runs through [pre-commit](https://pre-commit.com) hooks. They need 
 
 The basic hooks (`trailing-whitespace`, `end-of-file-fixer`, `check-yaml`, `check-merge-conflict`) need no binary: `pre-commit` builds their environment itself on the first run.
 
-## How to install hooks
+### How to install hooks
 
 1. Install the tools:
 
@@ -38,14 +89,14 @@ The basic hooks (`trailing-whitespace`, `end-of-file-fixer`, `check-yaml`, `chec
 
 From now on, `git commit` runs the hooks and stops the commit when one fails.
 
-## How to configure pre-commit
+### How to configure pre-commit
 
-### Where the config lives
+#### Where the config lives
 
 - `.pre-commit-config.yaml`: the list of hooks.
 - `.golangci.yml`: the `golangci-lint` config (v2 format). It keeps the default linters, enables `gosec` and turns on the `gofmt` formatter.
 
-### Hooks
+#### Hooks
 
 | Hook id | What it catches |
 | --- | --- |
@@ -58,16 +109,16 @@ From now on, `git commit` runs the hooks and stops the commit when one fails.
 | `go-test` | Failing tests (`go test ./...`). |
 | `govulncheck` | Vulnerable dependencies the code actually calls. |
 
-### When the Go hooks run
+#### When the Go hooks run
 
 `golangci-lint`, `go-test` and `govulncheck` check the whole module (`./...`), but only run when the commit touches a `.go`, `go.mod` or `go.sum` file. Otherwise they show as `Skipped`.
 
-### Add or disable a hook
+#### Add or disable a hook
 
 - **Add:** append an entry under `hooks:` in `.pre-commit-config.yaml`, either from a remote repo (with its `rev`) or as a `local` hook with `language: system`.
 - **Disable:** delete or comment out its entry.
 
-### Skip a hook for one commit
+#### Skip a hook for one commit
 
 Set `SKIP` to the hook id (comma-separated for several):
 
@@ -81,7 +132,7 @@ When you are offline, `govulncheck` fails because it cannot reach its database. 
 SKIP=govulncheck git commit -m "..."
 ```
 
-### Update versions
+#### Update versions
 
 - **Remote hooks** (`pre-commit-hooks`) are pinned by `rev`. Update them with:
 
