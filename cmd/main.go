@@ -63,7 +63,7 @@ func run(args []string, stderr io.Writer) int {
 	inv := inventory.New(found, appsErr, pkgs, brewErr)
 	log.Info("collected", "brew", len(inv.Brew), "app_store", len(inv.AppStore), "other", len(inv.Other))
 
-	if err := store.Write(dir, render.Markdown(inv, collectedAt)); err != nil {
+	if err := store.Write(dir, render.Markdown(inv, collectedAt), len(inv.Failures()) == 0, collectedAt); err != nil {
 		log.Error("writing inventory", "err", err)
 		return 1
 	}
