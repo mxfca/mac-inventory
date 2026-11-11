@@ -1,0 +1,42 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-merge-conflict
+        # Without this flag the hook only checks while a merge is in progress.
+        args: [--assume-in-merge]
+
+  # Local hooks call the binaries installed by brew; their versions are not pinned here.
+  - repo: local
+    hooks:
+      - id: gitleaks
+        name: gitleaks
+        entry: gitleaks git --pre-commit --staged --redact --verbose
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # Go hooks check the whole module, but only when a commit touches Go files.
+      - id: golangci-lint
+        name: golangci-lint
+        entry: golangci-lint run ./...
+        language: system
+        files: (\.go|(^|/)go\.(mod|sum))$
+        pass_filenames: false
+
+      - id: go-test
+        name: go test
+        entry: go test ./...
+        language: system
+        files: (\.go|(^|/)go\.(mod|sum))$
+        pass_filenames: false
+
+      - id: govulncheck
+        name: govulncheck
+        entry: govulncheck ./...
+        language: system
+        files: (\.go|(^|/)go\.(mod|sum))$
+        pass_filenames: false
