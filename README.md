@@ -8,7 +8,7 @@ Every commit runs through [pre-commit](https://pre-commit.com) hooks. They need 
 | --- | --- | --- | --- |
 | `pre-commit` | Runs all the hooks on each commit | all | `pre-commit --version` |
 | `gitleaks` | Finds secrets and private keys in staged changes | `gitleaks` | `gitleaks version` |
-| `go` | Runs the tests | `go-test` | `go version` |
+| `go` | Runs the tests; `golangci-lint` and `govulncheck` also need the Go toolchain | `go-test`, `golangci-lint`, `govulncheck` | `go version` |
 | `golangci-lint` | Lints Go code, including `go vet`, `gosec` and `gofmt` | `golangci-lint` | `golangci-lint version` |
 | `govulncheck` | Finds known vulnerabilities in dependencies the code calls | `govulncheck` | `govulncheck -version` |
 
@@ -50,7 +50,7 @@ From now on, `git commit` runs the hooks and stops the commit when one fails.
 | Hook id | What it catches |
 | --- | --- |
 | `trailing-whitespace` | Spaces at the end of a line. Fixes the file and fails, so you stage the fix. |
-| `end-of-file-fixer` | A file without a final newline. Fixes the file and fails. |
+| `end-of-file-fixer` | A file without exactly one final newline. Fixes the file and fails. |
 | `check-yaml` | Invalid YAML. |
 | `check-merge-conflict` | Leftover conflict markers. It runs on every commit, so a line that is exactly `=======` (for example a Markdown heading underlined with seven `=`) also fails it. |
 | `gitleaks` | Secrets and private keys in staged changes. The secret value is redacted in the output. It only reads what is staged, so `pre-commit run --all-files` with nothing staged checks nothing; use `gitleaks dir .` to scan the whole tree. |
