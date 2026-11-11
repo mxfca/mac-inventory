@@ -52,17 +52,15 @@ func run(args []string, stderr io.Writer) int {
 	log.Info("destination", "dir", dir)
 
 	collectedAt := time.Now()
-	found, err := apps.Collect(runner.Exec{})
-	if err != nil {
-		log.Error("collecting applications", "err", err)
-		return 1
+	found, appsErr := apps.Collect(runner.Exec{})
+	if appsErr != nil {
+		log.Error("collecting applications", "err", appsErr)
 	}
-	pkgs, err := brew.Collect(runner.Exec{})
-	if err != nil {
-		log.Error("collecting brew packages", "err", err)
-		return 1
+	pkgs, brewErr := brew.Collect(runner.Exec{})
+	if brewErr != nil {
+		log.Error("collecting brew packages", "err", brewErr)
 	}
-	inv := inventory.New(found, pkgs)
+	inv := inventory.New(found, appsErr, pkgs, brewErr)
 	log.Info("collected", "brew", len(inv.Brew), "app_store", len(inv.AppStore), "other", len(inv.Other))
 
 	if err := store.Write(dir, render.Markdown(inv, collectedAt)); err != nil {

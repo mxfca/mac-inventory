@@ -4,7 +4,6 @@ import (
 	"errors"
 	"os"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/mxfca/mac-inventory/internal/apps"
@@ -70,8 +69,8 @@ func TestCollectFailsWhenCommandFails(t *testing.T) {
 
 	_, err := apps.Collect(r)
 
-	if err == nil || !strings.Contains(err.Error(), "exit status 1") {
-		t.Errorf("got %v, want the command error", err)
+	if err == nil || err.Error() != "exit status 1" {
+		t.Errorf("got %v, want the bare command error (inventory adds the system_profiler label)", err)
 	}
 }
 

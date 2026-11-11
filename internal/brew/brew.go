@@ -43,11 +43,11 @@ type report struct {
 func Collect(r runner.Runner) ([]Package, error) {
 	out, err := r.Run(path, "info", "--json=v2", "--installed")
 	if err != nil {
-		return nil, fmt.Errorf("brew: %w", err)
+		return nil, err
 	}
 	var rep report
 	if err := json.Unmarshal(out, &rep); err != nil {
-		return nil, fmt.Errorf("brew: unreadable JSON: %w", err)
+		return nil, fmt.Errorf("unreadable JSON: %w", err)
 	}
 
 	var pkgs []Package

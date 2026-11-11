@@ -31,11 +31,11 @@ type report struct {
 func Collect(r runner.Runner) ([]App, error) {
 	out, err := r.Run("system_profiler", "SPApplicationsDataType", "-json")
 	if err != nil {
-		return nil, fmt.Errorf("system_profiler: %w", err)
+		return nil, err
 	}
 	var rep report
 	if err := json.Unmarshal(out, &rep); err != nil {
-		return nil, fmt.Errorf("system_profiler: unreadable JSON: %w", err)
+		return nil, fmt.Errorf("unreadable JSON: %w", err)
 	}
 
 	var apps []App

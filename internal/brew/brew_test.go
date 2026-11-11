@@ -4,7 +4,6 @@ import (
 	"errors"
 	"os"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/mxfca/mac-inventory/internal/brew"
@@ -56,8 +55,8 @@ func TestCollectFailsWhenCommandFails(t *testing.T) {
 
 	_, err := brew.Collect(r)
 
-	if err == nil || !strings.Contains(err.Error(), "exit status 1") {
-		t.Errorf("got %v, want the command error", err)
+	if err == nil || err.Error() != "exit status 1" {
+		t.Errorf("got %v, want the bare command error (inventory adds the brew label)", err)
 	}
 }
 
