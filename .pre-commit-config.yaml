@@ -29,7 +29,15 @@ repos:
 
       - id: go-test
         name: go test
-        entry: go test ./...
+        entry: go test ./... -coverprofile=coverage.out
+        language: system
+        files: (\.go|(^|/)go\.(mod|sum))$
+        pass_filenames: false
+
+      # Reads the coverage.out written by go-test (hooks run in file order).
+      - id: go-coverage
+        name: go coverage >= 80%
+        entry: scripts/check-coverage.sh
         language: system
         files: (\.go|(^|/)go\.(mod|sum))$
         pass_filenames: false
