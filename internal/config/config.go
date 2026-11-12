@@ -36,12 +36,7 @@ func Write(home, dir string) error {
 	if err := validateFolder(dir); err != nil {
 		return err
 	}
-	path := filepath.Join(home, FileName)
-	if err := os.WriteFile(path, []byte(dir+"\n"), 0o600); err != nil {
-		return err
-	}
-	// WriteFile only applies the mode when it creates the file.
-	return os.Chmod(path, 0o600)
+	return writeFile(home, dir)
 }
 
 // validateFolder checks that dir is an absolute path to an existing folder.
@@ -57,4 +52,32 @@ func validateFolder(dir string) error {
 		return fmt.Errorf("%q is not a folder", dir)
 	}
 	return nil
+}
+
+// writeFile atomically replaces home/.mac-inventory with dir and a line break:
+// readers see the old file or the new one, never a partial one.
+// The temp file is created in home so the rename stays on one filesystem, and it is born 0600.
+func writeFile(home, dir string) (err error) {
+	tmp, err := os.CreateTemp(home, FileName+"-*.tmp")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = os.Remove(tmp.Name())
+		}
+	}()
+
+	if _, err = tmp.WriteString(dir + "\n"); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	if err = tmp.Sync(); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	if err = tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmp.Name(), filepath.Join(home, FileName))
 }
