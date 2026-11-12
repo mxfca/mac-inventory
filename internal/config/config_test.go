@@ -137,3 +137,31 @@ func TestWriteRefusesBadFolderWithoutCreatingFile(t *testing.T) {
 		t.Errorf("file should not exist, stat err = %v", err)
 	}
 }
+
+func TestWriteTrimsSpacesAndReadReturnsThemTrimmed(t *testing.T) {
+	home, dir := t.TempDir(), t.TempDir()
+
+	if err := config.Write(home, "  "+dir+" \t"); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := readFile(t, home); got != dir+"\n" {
+		t.Errorf("file = %q, want %q", got, dir+"\n")
+	}
+	if got, err := config.Read(home); err != nil || got != dir {
+		t.Errorf("Read = %q, %v; want %q", got, err, dir)
+	}
+}
+
+func TestWriteRefusesBlankPathAndKeepsFile(t *testing.T) {
+	home := t.TempDir()
+	writeConfig(t, home, "/old/folder\n")
+
+	if err := config.Write(home, " \t "); err == nil {
+		t.Fatal("want an error")
+	}
+
+	if got := readFile(t, home); got != "/old/folder\n" {
+		t.Errorf("file changed to %q", got)
+	}
+}
