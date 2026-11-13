@@ -2,6 +2,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -68,15 +69,10 @@ func writeFile(home, dir string) (err error) {
 		}
 	}()
 
-	if _, err = tmp.WriteString(dir + "\n"); err != nil {
-		_ = tmp.Close()
-		return err
-	}
-	if err = tmp.Sync(); err != nil {
-		_ = tmp.Close()
-		return err
-	}
-	if err = tmp.Close(); err != nil {
+	_, writeErr := tmp.WriteString(dir + "\n")
+	syncErr := tmp.Sync()
+	closeErr := tmp.Close()
+	if err = errors.Join(writeErr, syncErr, closeErr); err != nil {
 		return err
 	}
 	return os.Rename(tmp.Name(), filepath.Join(home, FileName))
