@@ -171,3 +171,13 @@ func TestRunLogsWhenHomeWarningCannotBeShown(t *testing.T) {
 		t.Errorf("exit %d, stderr %q; want 1 and a notification error in the log", code, stderr)
 	}
 }
+
+func TestWriteTimeoutWarningNamesTheOneDrivePermission(t *testing.T) {
+	got := writeTimeoutWarning()
+
+	for _, want := range []string{"could not write the inventory:", "60s", "OneDrive access permission"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("warning %q; want it to contain %q", got, want)
+		}
+	}
+}

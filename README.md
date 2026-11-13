@@ -48,6 +48,7 @@ A macOS notification means nothing was written:
 
 - **Destination not configured:** `~/.mac-inventory` is missing or does not hold an absolute path. Run `mac-inventory --path <folder>`.
 - **Could not write the inventory:** the notification gives the cause, for example the destination folder does not exist (OneDrive not mounted) or there is no permission. The previous inventory is left untouched.
+- **No answer after 60s:** the write did not finish in 60 seconds and the run exited with 1. macOS may be waiting for you to allow `mac-inventory` to access OneDrive, and nobody answered the prompt (scheduled runs have no one to click). Answer **Allow** when the prompt shows, then run `mac-inventory` again. macOS remembers the answer for the binary's path. The inventory may already have been written; the notification only says the run did not finish.
 
 ## Development
 
