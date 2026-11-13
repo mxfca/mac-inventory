@@ -39,8 +39,9 @@ func (r result) installed() bool {
 
 func (r result) configFile() string { return filepath.Join(r.home, ".mac-inventory") }
 
-// install runs install.sh with the given ~/.mac-inventory content (nil: no file) and answer on stdin.
-func install(t *testing.T, config *string, answer string) result {
+// install runs install.sh with the given ~/.mac-inventory content (nil: no file) and answer on stdin;
+// setup funcs prepare HOME further.
+func install(t *testing.T, config *string, answer string, setup ...func(home string)) result {
 	t.Helper()
 	script, err := filepath.Abs("../../install.sh")
 	if err != nil {
@@ -54,9 +55,13 @@ func install(t *testing.T, config *string, answer string) result {
 		}
 	}
 	if config != nil {
-		if err := os.WriteFile(filepath.Join(home, ".mac-inventory"), []byte(*config), 0o600); err != nil {
+		if err := os.WriteFile(filepath.Join(home, ".mac-inventory"), []byte(*config), 0o644); err != nil { //nolint:gosec // a loose mode proves the installer tightens it
 			t.Fatal(err)
 		}
+	}
+
+	for _, f := range setup {
+		f(home)
 	}
 
 	cmd := exec.Command("/bin/sh", script) //nolint:gosec // script path is fixed by the repo layout
@@ -98,6 +103,9 @@ func TestFirstInstallAsksWritesPrivateConfigAndInstalls(t *testing.T) {
 	if r.exitCode != 0 || !r.asked() || !r.installed() {
 		t.Fatalf("exit %d, asked %v, installed %v; want 0, true, true\n%s", r.exitCode, r.asked(), r.installed(), r.stderr)
 	}
+	if strings.Contains(r.stdout, "invalid") {
+		t.Errorf("stdout %q warns about a config that did not exist", r.stdout)
+	}
 	if got, _ := os.ReadFile(r.configFile()); string(got) != dest+"\n" {
 		t.Errorf("config = %q, want %q", got, dest+"\n")
 	}
@@ -123,5 +131,78 @@ func TestFirstInstallRefusesInvalidAnswer(t *testing.T) {
 				t.Error("config was written")
 			}
 		})
+	}
+}
+
+func TestInvalidConfigWarnsAsksAndRepairs(t *testing.T) {
+	file := filepath.Join(t.TempDir(), "a-file")
+	if err := os.WriteFile(file, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for name, tc := range map[string]struct{ config, reason string }{
+		"empty":        {"", "empty"},
+		"blank":        {" \n\t\n", "empty"},
+		"relative":     {"some/folder\n", "relative"},
+		"nonexistent":  {"/no/such/folder\n", "does not exist"},
+		"not a folder": {file + "\n", "not a folder"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			dest := t.TempDir()
+
+			r := install(t, str(tc.config), "  "+dest+"  ")
+
+			if r.exitCode != 0 || !r.asked() || !r.installed() {
+				t.Fatalf("exit %d, asked %v, installed %v; want 0, true, true\n%s", r.exitCode, r.asked(), r.installed(), r.stderr)
+			}
+			if !strings.Contains(r.stdout, tc.reason) {
+				t.Errorf("stdout %q has no warning about %q", r.stdout, tc.reason)
+			}
+			if got, _ := os.ReadFile(r.configFile()); string(got) != dest+"\n" {
+				t.Errorf("config = %q, want %q", got, dest+"\n")
+			}
+			info, err := os.Stat(r.configFile())
+			if err != nil || info.Mode().Perm() != 0o600 {
+				t.Errorf("config mode %v (err %v), want 0600", info.Mode().Perm(), err)
+			}
+		})
+	}
+}
+
+func TestInvalidConfigAndInvalidAnswerAbortsLeavingConfig(t *testing.T) {
+	file := filepath.Join(t.TempDir(), "a-file")
+	if err := os.WriteFile(file, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for name, answer := range map[string]string{
+		"relative":    "some/folder",
+		"nonexistent": "/no/such/folder",
+		"file":        file,
+	} {
+		t.Run(name, func(t *testing.T) {
+			const old = "relative/old\n"
+
+			r := install(t, str(old), answer)
+
+			if r.exitCode == 0 || r.calls != "" || r.stderr == "" {
+				t.Errorf("exit %d, calls %q, stderr %q; want an error and no go/launchctl call", r.exitCode, r.calls, r.stderr)
+			}
+			if got, _ := os.ReadFile(r.configFile()); string(got) != old {
+				t.Errorf("config = %q, want it untouched (%q)", got, old)
+			}
+		})
+	}
+}
+
+func TestConfigThatCannotBeWrittenAbortsWithoutInstalling(t *testing.T) {
+	dest := t.TempDir()
+
+	r := install(t, nil, dest, func(home string) {
+		if err := os.Mkdir(filepath.Join(home, ".mac-inventory"), 0o700); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	if r.exitCode == 0 || r.calls != "" {
+		t.Errorf("exit %d, calls %q; want an error and no go/launchctl call", r.exitCode, r.calls)
 	}
 }
