@@ -18,6 +18,12 @@ import (
 	"github.com/mxfca/mac-inventory/internal/render"
 	"github.com/mxfca/mac-inventory/internal/runner"
 	"github.com/mxfca/mac-inventory/internal/store"
+	"github.com/mxfca/mac-inventory/internal/watchdog"
+)
+
+const (
+	writeFailed  = "could not write the inventory: "
+	writeTimeout = 60 * time.Second
 )
 
 func main() {
@@ -75,13 +81,32 @@ func run(args []string, stderr io.Writer) int {
 	inv := inventory.New(found, appsErr, pkgs, brewErr)
 	log.Info("collected", "brew", len(inv.Brew), "app_store", len(inv.AppStore), "other", len(inv.Other))
 
-	if err := store.Write(dir, render.Markdown(inv, collectedAt), len(inv.Failures()) == 0, collectedAt); err != nil {
+	body := render.Markdown(inv, collectedAt)
+	complete := len(inv.Failures()) == 0
+	// A file open stuck on the macOS OneDrive permission prompt cannot be cancelled: warn and exit.
+	stopWatch := watchdog.Start(writeTimeout, onWriteTimeout(log, os.Exit))
+	err = store.Write(dir, body, complete, collectedAt)
+	stopWatch()
+	if err != nil {
 		log.Error("writing inventory", "err", err)
-		warn(log, "could not write the inventory: "+notify.Cause(err))
+		warn(log, writeFailed+notify.Cause(err))
 		return 1
 	}
 	log.Info("inventory written", "file", store.FileName)
 	return 0
+}
+
+// onWriteTimeout is the watchdog action: log, show the warning, then leave with 1.
+func onWriteTimeout(log *slog.Logger, exit func(int)) func() {
+	return func() {
+		log.Error("writing inventory", "err", "no answer after the deadline", "timeout", writeTimeout)
+		warn(log, writeTimeoutWarning())
+		exit(1)
+	}
+}
+
+func writeTimeoutWarning() string {
+	return fmt.Sprintf("%sno answer after %.0fs (macOS may be waiting for OneDrive access permission)", writeFailed, writeTimeout.Seconds())
 }
 
 // pathGiven tells --path "" (refused later by config) from no --path at all.
