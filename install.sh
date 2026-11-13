@@ -8,22 +8,38 @@ bin="$HOME/.local/bin/mac-inventory"
 plist="$HOME/Library/LaunchAgents/$label.plist"
 domain="gui/$(id -u)"
 
-# First install: ask for the destination folder before doing anything else.
-if [ ! -e "$config" ]; then
-	printf 'Destination folder for the inventory (absolute path): '
-	read -r dir
-	case "$dir" in
-	/*) ;;
-	*)
-		echo "install.sh: the folder must be an absolute path; nothing was installed." >&2
-		exit 1
+# Fails and sets $reason unless $1 is an absolute path to an existing folder
+# (the same rule as config.Write).
+check_dir() {
+	case "$1" in
+	"") reason="the folder is empty" ;;
+	/*)
+		[ -d "$1" ] && return 0
+		if [ -e "$1" ]; then reason="$1 is not a folder"; else reason="$1 does not exist"; fi
 		;;
+	*) reason="$1 is a relative path, not an absolute one" ;;
 	esac
-	if [ ! -d "$dir" ]; then
-		echo "install.sh: $dir is not an existing folder; nothing was installed." >&2
+	return 1
+}
+
+# Keep the saved folder if it is valid; otherwise ask for it before doing anything else.
+# The whole file is read and trimmed at both ends, like config.Read, so an extra line makes the path invalid.
+dir=""
+if [ -e "$config" ]; then
+	dir=$(cat "$config" 2>/dev/null) || dir=""
+	dir=${dir#"${dir%%[![:space:]]*}"}
+	dir=${dir%"${dir##*[![:space:]]}"}
+fi
+if ! check_dir "$dir"; then
+	[ ! -e "$config" ] || echo "install.sh: $config is invalid ($reason); asking for the folder again."
+	printf 'Destination folder for the inventory (absolute path): '
+	read -r dir || true
+	if ! check_dir "$dir"; then
+		echo "install.sh: $reason; nothing was installed." >&2
 		exit 1
 	fi
 	(umask 077 && printf '%s\n' "$dir" >"$config")
+	chmod 600 "$config" # umask does not tighten a file that already exists
 fi
 
 cd "$(dirname "$0")"
