@@ -45,6 +45,7 @@ func run(args []string, stderr io.Writer) int {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		log.Error("home folder not found", "err", err)
+		warn(log, "home folder not found: "+notify.Cause(err))
 		return 1
 	}
 	if pathGiven(flags, "path") {

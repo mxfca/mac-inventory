@@ -110,3 +110,64 @@ func TestRunFailsWhenInventoryCannotBeWritten(t *testing.T) {
 		t.Errorf("exit %d, stderr %q; want 1 and a write error", code, stderr)
 	}
 }
+
+// noHome leaves HOME empty so os.UserHomeDir fails, and puts a fake osascript on PATH
+// that records its arguments; the returned file holds what the notification would show.
+func noHome(t *testing.T) (shown string) {
+	t.Helper()
+	bin := t.TempDir()
+	shown = filepath.Join(t.TempDir(), "osascript-args")
+	script := "#!/bin/sh\nprintf '%s\\n' \"$@\" > '" + shown + "'\n"
+	if err := os.WriteFile(filepath.Join(bin, "osascript"), []byte(script), 0o700); err != nil { //nolint:gosec // test stub must be executable
+		t.Fatal(err)
+	}
+	t.Setenv("HOME", "")
+	t.Setenv("PATH", bin)
+	return shown
+}
+
+func TestRunWarnsWhenHomeFolderNotFound(t *testing.T) {
+	shown := noHome(t)
+
+	code, stderr := runWith("--show-logs")
+
+	if code != 1 || !strings.Contains(stderr, "home folder not found") {
+		t.Errorf("exit %d, stderr %q; want 1 and a home error in the log", code, stderr)
+	}
+	args, err := os.ReadFile(shown) //nolint:gosec // path built by the test
+	if err != nil {
+		t.Fatalf("no notification shown: %v", err)
+	}
+	if want := `display notification "home folder not found: $HOME is not defined"`; !strings.Contains(string(args), want) {
+		t.Errorf("notification %q; want it to contain %q", args, want)
+	}
+}
+
+func TestRunWithPathStillWarnsWhenHomeFolderNotFound(t *testing.T) {
+	shown := noHome(t)
+
+	dest := t.TempDir()
+
+	code, _ := runWith("--path", dest)
+
+	if code != 1 {
+		t.Errorf("exit %d, want 1", code)
+	}
+	if _, err := os.Stat(shown); err != nil {
+		t.Errorf("no notification shown: %v", err)
+	}
+	if entries, err := os.ReadDir(dest); err != nil || len(entries) != 0 {
+		t.Errorf("destination has %d entries, %v; want it untouched", len(entries), err)
+	}
+}
+
+func TestRunLogsWhenHomeWarningCannotBeShown(t *testing.T) {
+	t.Setenv("HOME", "")
+	t.Setenv("PATH", t.TempDir())
+
+	code, stderr := runWith("--show-logs")
+
+	if code != 1 || !strings.Contains(stderr, "showing notification") {
+		t.Errorf("exit %d, stderr %q; want 1 and a notification error in the log", code, stderr)
+	}
+}
