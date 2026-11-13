@@ -84,11 +84,7 @@ func run(args []string, stderr io.Writer) int {
 	body := render.Markdown(inv, collectedAt)
 	complete := len(inv.Failures()) == 0
 	// A file open stuck on the macOS OneDrive permission prompt cannot be cancelled: warn and exit.
-	stopWatch := watchdog.Start(writeTimeout, func() {
-		log.Error("writing inventory", "err", "no answer after the deadline", "timeout", writeTimeout)
-		warn(log, writeTimeoutWarning())
-		os.Exit(1)
-	})
+	stopWatch := watchdog.Start(writeTimeout, onWriteTimeout(log, os.Exit))
 	err = store.Write(dir, body, complete, collectedAt)
 	stopWatch()
 	if err != nil {
@@ -98,6 +94,15 @@ func run(args []string, stderr io.Writer) int {
 	}
 	log.Info("inventory written", "file", store.FileName)
 	return 0
+}
+
+// onWriteTimeout is the watchdog action: log, show the warning, then leave with 1.
+func onWriteTimeout(log *slog.Logger, exit func(int)) func() {
+	return func() {
+		log.Error("writing inventory", "err", "no answer after the deadline", "timeout", writeTimeout)
+		warn(log, writeTimeoutWarning())
+		exit(1)
+	}
 }
 
 func writeTimeoutWarning() string {

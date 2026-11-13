@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -179,5 +180,23 @@ func TestWriteTimeoutWarningNamesTheOneDrivePermission(t *testing.T) {
 		if !strings.Contains(got, want) {
 			t.Errorf("warning %q; want it to contain %q", got, want)
 		}
+	}
+}
+
+func TestWriteTimeoutShowsTheWarningThenExitsWithOne(t *testing.T) {
+	shown := noHome(t)
+	exitCode := -1
+
+	onWriteTimeout(slog.New(slog.DiscardHandler), func(code int) { exitCode = code })()
+
+	if exitCode != 1 {
+		t.Errorf("exit %d, want 1", exitCode)
+	}
+	args, err := os.ReadFile(shown) //nolint:gosec // path built by the test
+	if err != nil {
+		t.Fatalf("no notification shown: %v", err)
+	}
+	if want := "OneDrive access permission"; !strings.Contains(string(args), want) {
+		t.Errorf("notification %q; want it to contain %q", args, want)
 	}
 }
