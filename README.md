@@ -10,7 +10,7 @@ A Go program that, every Sunday at 12:00, writes the list of applications instal
 
 The first time, it asks for the destination folder (an absolute path to a folder that already exists) and saves it in `~/.mac-inventory`. It then builds the binary into `~/.local/bin/mac-inventory` and loads the `com.mxfca.mac-inventory` launch agent. If the Mac is asleep at the scheduled time, the collection runs when it wakes up.
 
-Run `./install.sh` again after changing the code to rebuild and reload the agent. It keeps the folder already saved in `~/.mac-inventory`.
+Run `./install.sh` again after changing the code to rebuild and reload the agent. It keeps the folder already saved in `~/.mac-inventory` if the file exists and is valid. If it is empty, or holds a relative path or a folder that does not exist, the installer warns why and asks for the destination folder again, as on the first install. It saves the answer only if it is valid; otherwise it stops without installing anything.
 
 ## Uninstall
 
