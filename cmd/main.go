@@ -81,13 +81,15 @@ func run(args []string, stderr io.Writer) int {
 	inv := inventory.New(found, appsErr, pkgs, brewErr)
 	log.Info("collected", "brew", len(inv.Brew), "app_store", len(inv.AppStore), "other", len(inv.Other))
 
+	body := render.Markdown(inv, collectedAt)
+	complete := len(inv.Failures()) == 0
 	// A file open stuck on the macOS OneDrive permission prompt cannot be cancelled: warn and exit.
 	stopWatch := watchdog.Start(writeTimeout, func() {
 		log.Error("writing inventory", "err", "no answer after the deadline", "timeout", writeTimeout)
 		warn(log, writeTimeoutWarning())
 		os.Exit(1)
 	})
-	err = store.Write(dir, render.Markdown(inv, collectedAt), len(inv.Failures()) == 0, collectedAt)
+	err = store.Write(dir, body, complete, collectedAt)
 	stopWatch()
 	if err != nil {
 		log.Error("writing inventory", "err", err)
