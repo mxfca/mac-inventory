@@ -2,6 +2,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -29,9 +30,18 @@ func Read(home string) (string, error) {
 	return dir, nil
 }
 
-// Write saves dir as the destination folder in home/.mac-inventory.
+// Write saves dir, with the spaces at its ends trimmed, as the destination folder in home/.mac-inventory.
 // A relative path or a folder that does not exist is refused and the file is left untouched.
 func Write(home, dir string) error {
+	dir = strings.TrimSpace(dir)
+	if err := validateFolder(dir); err != nil {
+		return err
+	}
+	return writeFile(home, dir)
+}
+
+// validateFolder checks that dir is an absolute path to an existing folder.
+func validateFolder(dir string) error {
 	if !filepath.IsAbs(dir) {
 		return fmt.Errorf("%q is not an absolute path", dir)
 	}
@@ -42,10 +52,28 @@ func Write(home, dir string) error {
 	if !info.IsDir() {
 		return fmt.Errorf("%q is not a folder", dir)
 	}
-	path := filepath.Join(home, FileName)
-	if err := os.WriteFile(path, []byte(dir+"\n"), 0o600); err != nil {
+	return nil
+}
+
+// writeFile atomically replaces home/.mac-inventory with dir and a line break:
+// readers see the old file or the new one, never a partial one.
+// The temp file is created in home so the rename stays on one filesystem, and it is born 0600.
+func writeFile(home, dir string) (err error) {
+	tmp, err := os.CreateTemp(home, FileName+"-*.tmp")
+	if err != nil {
 		return err
 	}
-	// WriteFile only applies the mode when it creates the file.
-	return os.Chmod(path, 0o600)
+	defer func() {
+		if err != nil {
+			_ = os.Remove(tmp.Name())
+		}
+	}()
+
+	_, writeErr := tmp.WriteString(dir + "\n")
+	syncErr := tmp.Sync()
+	closeErr := tmp.Close()
+	if err = errors.Join(writeErr, syncErr, closeErr); err != nil {
+		return err
+	}
+	return os.Rename(tmp.Name(), filepath.Join(home, FileName))
 }
