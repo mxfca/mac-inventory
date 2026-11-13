@@ -95,6 +95,16 @@ func TestKeepsValidConfigWithoutAsking(t *testing.T) {
 	}
 }
 
+func TestKeepsValidConfigWithSurroundingWhitespace(t *testing.T) {
+	dest := t.TempDir()
+
+	r := install(t, str("\n "+dest+" \r\n"), "")
+
+	if r.exitCode != 0 || r.asked() || !r.installed() {
+		t.Fatalf("exit %d, asked %v, installed %v; want 0, false, true\n%s", r.exitCode, r.asked(), r.installed(), r.stderr)
+	}
+}
+
 func TestFirstInstallAsksWritesPrivateConfigAndInstalls(t *testing.T) {
 	dest := t.TempDir()
 
@@ -145,6 +155,7 @@ func TestInvalidConfigWarnsAsksAndRepairs(t *testing.T) {
 		"relative":     {"some/folder\n", "relative"},
 		"nonexistent":  {"/no/such/folder\n", "does not exist"},
 		"not a folder": {file + "\n", "not a folder"},
+		"extra line":   {"/\nleftover\n", "does not exist"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			dest := t.TempDir()

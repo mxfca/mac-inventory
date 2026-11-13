@@ -23,9 +23,13 @@ check_dir() {
 }
 
 # Keep the saved folder if it is valid; otherwise ask for it before doing anything else.
-# shortcut: only the first line is read, so a file with a blank first line counts as empty, when that matters read the whole file.
+# The whole file is read and trimmed at both ends, like config.Read, so an extra line makes the path invalid.
 dir=""
-if [ -e "$config" ]; then read -r dir <"$config" || true; fi
+if [ -e "$config" ]; then
+	dir=$(cat "$config" 2>/dev/null) || dir=""
+	dir=${dir#"${dir%%[![:space:]]*}"}
+	dir=${dir%"${dir##*[![:space:]]}"}
+fi
 if ! check_dir "$dir"; then
 	[ ! -e "$config" ] || echo "install.sh: $config is invalid ($reason); asking for the folder again."
 	printf 'Destination folder for the inventory (absolute path): '
