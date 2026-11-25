@@ -2,6 +2,7 @@
 package notify
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -13,9 +14,9 @@ import (
 var escaper = strings.NewReplacer(`\`, `\\`, `"`, `\"`)
 
 // Show displays a notification with the given title and cause.
-func Show(r runner.Runner, title, cause string) error {
+func Show(ctx context.Context, r runner.Runner, title, cause string) error {
 	script := fmt.Sprintf(`display notification "%s" with title "%s"`, escaper.Replace(cause), escaper.Replace(title))
-	_, err := r.Run("osascript", "-e", script)
+	_, err := r.Run(ctx, "osascript", "-e", script)
 	return err
 }
 

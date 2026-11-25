@@ -2,6 +2,7 @@
 package brew
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
@@ -40,8 +41,8 @@ type report struct {
 }
 
 // Collect returns the formulae installed on request and all casks, formulae first.
-func Collect(r runner.Runner) ([]Package, error) {
-	out, err := r.Run(path, "info", "--json=v2", "--installed")
+func Collect(ctx context.Context, r runner.Runner) ([]Package, error) {
+	out, err := r.Run(ctx, path, "info", "--json=v2", "--installed")
 	if err != nil {
 		return nil, err
 	}

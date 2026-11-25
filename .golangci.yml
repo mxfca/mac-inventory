@@ -1,9 +1,15 @@
 version: "2"
 
 linters:
-  # Keeps the default linters (govet included) and adds gosec.
+  # Keeps the default linters (govet included) and adds gosec, gocognit, contextcheck and noctx.
   enable:
     - gosec
+    - gocognit
+    - contextcheck
+    - noctx
+  settings:
+    gocognit:
+      min-complexity: 15
 
 formatters:
   enable:

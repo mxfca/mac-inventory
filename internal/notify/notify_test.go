@@ -1,6 +1,7 @@
 package notify_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -16,7 +17,7 @@ type fakeRunner struct {
 	args []string
 }
 
-func (f *fakeRunner) Run(name string, args ...string) ([]byte, error) {
+func (f *fakeRunner) Run(_ context.Context, name string, args ...string) ([]byte, error) {
 	f.name, f.args = name, args
 	return nil, f.err
 }
@@ -24,7 +25,7 @@ func (f *fakeRunner) Run(name string, args ...string) ([]byte, error) {
 func TestShowAsksOsascriptForANotificationWithTitleAndCause(t *testing.T) {
 	r := &fakeRunner{}
 
-	if err := notify.Show(r, "mac-inventory", "folder not found"); err != nil {
+	if err := notify.Show(t.Context(), r, "mac-inventory", "folder not found"); err != nil {
 		t.Fatalf("Show: %v", err)
 	}
 
@@ -37,7 +38,7 @@ func TestShowAsksOsascriptForANotificationWithTitleAndCause(t *testing.T) {
 func TestShowEscapesQuotesAndBackslashes(t *testing.T) {
 	r := &fakeRunner{}
 
-	if err := notify.Show(r, "mac-inventory", `open "a\b": denied`); err != nil {
+	if err := notify.Show(t.Context(), r, "mac-inventory", `open "a\b": denied`); err != nil {
 		t.Fatalf("Show: %v", err)
 	}
 
@@ -50,7 +51,7 @@ func TestShowEscapesQuotesAndBackslashes(t *testing.T) {
 func TestShowReturnsTheCommandError(t *testing.T) {
 	r := &fakeRunner{err: errors.New("boom")}
 
-	if err := notify.Show(r, "t", "c"); err == nil {
+	if err := notify.Show(t.Context(), r, "t", "c"); err == nil {
 		t.Fatal("Show returned nil")
 	}
 }

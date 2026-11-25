@@ -187,7 +187,7 @@ func TestWriteTimeoutShowsTheWarningThenExitsWithOne(t *testing.T) {
 	shown := noHome(t)
 	exitCode := -1
 
-	onWriteTimeout(slog.New(slog.DiscardHandler), func(code int) { exitCode = code })()
+	onWriteTimeout(t.Context(), slog.New(slog.DiscardHandler), func(code int) { exitCode = code })()
 
 	if exitCode != 1 {
 		t.Errorf("exit %d, want 1", exitCode)

@@ -1,6 +1,7 @@
 package brew_test
 
 import (
+	"context"
 	"errors"
 	"os"
 	"reflect"
@@ -16,7 +17,7 @@ type fakeRunner struct {
 	args []string
 }
 
-func (f *fakeRunner) Run(name string, args ...string) ([]byte, error) {
+func (f *fakeRunner) Run(_ context.Context, name string, args ...string) ([]byte, error) {
 	f.name, f.args = name, args
 	return f.out, f.err
 }
@@ -28,7 +29,7 @@ func TestCollectKeepsRequestedFormulaeAndAllCasks(t *testing.T) {
 	}
 	r := &fakeRunner{out: out}
 
-	got, err := brew.Collect(r)
+	got, err := brew.Collect(t.Context(), r)
 	if err != nil {
 		t.Fatalf("Collect: %v", err)
 	}
@@ -53,7 +54,7 @@ func TestCollectKeepsRequestedFormulaeAndAllCasks(t *testing.T) {
 func TestCollectFailsWhenCommandFails(t *testing.T) {
 	r := &fakeRunner{err: errors.New("exit status 1")}
 
-	_, err := brew.Collect(r)
+	_, err := brew.Collect(t.Context(), r)
 
 	if err == nil || err.Error() != "exit status 1" {
 		t.Errorf("got %v, want the bare command error (inventory adds the brew label)", err)
@@ -63,7 +64,7 @@ func TestCollectFailsWhenCommandFails(t *testing.T) {
 func TestCollectFailsOnUnreadableJSON(t *testing.T) {
 	r := &fakeRunner{out: []byte("not json")}
 
-	if _, err := brew.Collect(r); err == nil {
+	if _, err := brew.Collect(t.Context(), r); err == nil {
 		t.Error("got nil error for unreadable JSON")
 	}
 }

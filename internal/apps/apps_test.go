@@ -1,6 +1,7 @@
 package apps_test
 
 import (
+	"context"
 	"errors"
 	"os"
 	"reflect"
@@ -16,7 +17,7 @@ type fakeRunner struct {
 	args []string
 }
 
-func (f *fakeRunner) Run(name string, args ...string) ([]byte, error) {
+func (f *fakeRunner) Run(_ context.Context, name string, args ...string) ([]byte, error) {
 	f.name, f.args = name, args
 	return f.out, f.err
 }
@@ -28,7 +29,7 @@ func TestCollectKeepsApplicationsFolderAndClassifiesSource(t *testing.T) {
 	}
 	r := &fakeRunner{out: out}
 
-	got, err := apps.Collect(r)
+	got, err := apps.Collect(t.Context(), r)
 	if err != nil {
 		t.Fatalf("Collect: %v", err)
 	}
@@ -53,7 +54,7 @@ func TestCollectDropsAppleAppsInApplicationsFolder(t *testing.T) {
 		{"_name": "Zoom", "obtained_from": "unknown", "path": "/Applications/zoom.us.app"}
 	]}`)}
 
-	got, err := apps.Collect(r)
+	got, err := apps.Collect(t.Context(), r)
 	if err != nil {
 		t.Fatalf("Collect: %v", err)
 	}
@@ -67,7 +68,7 @@ func TestCollectDropsAppleAppsInApplicationsFolder(t *testing.T) {
 func TestCollectFailsWhenCommandFails(t *testing.T) {
 	r := &fakeRunner{err: errors.New("exit status 1")}
 
-	_, err := apps.Collect(r)
+	_, err := apps.Collect(t.Context(), r)
 
 	if err == nil || err.Error() != "exit status 1" {
 		t.Errorf("got %v, want the bare command error (inventory adds the system_profiler label)", err)
@@ -77,7 +78,7 @@ func TestCollectFailsWhenCommandFails(t *testing.T) {
 func TestCollectFailsOnUnreadableJSON(t *testing.T) {
 	r := &fakeRunner{out: []byte("not json")}
 
-	if _, err := apps.Collect(r); err == nil {
+	if _, err := apps.Collect(t.Context(), r); err == nil {
 		t.Error("got nil error for unreadable JSON")
 	}
 }
