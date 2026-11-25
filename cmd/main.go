@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -43,6 +44,7 @@ func run(args []string, stderr io.Writer) int {
 		return 2
 	}
 
+	ctx := context.Background()
 	log := slog.New(slog.DiscardHandler)
 	if *showLogs {
 		log = slog.New(slog.NewTextHandler(stderr, nil))
@@ -51,7 +53,7 @@ func run(args []string, stderr io.Writer) int {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		log.Error("home folder not found", "err", err)
-		warn(log, "home folder not found: "+notify.Cause(err))
+		warn(ctx, log, "home folder not found: "+notify.Cause(err))
 		return 1
 	}
 	if pathGiven(flags, "path") {
@@ -64,17 +66,17 @@ func run(args []string, stderr io.Writer) int {
 	dir, err := config.Read(home)
 	if err != nil {
 		log.Error("reading destination", "err", err)
-		warn(log, "destination not configured: set the folder in ~/.mac-inventory")
+		warn(ctx, log, "destination not configured: set the folder in ~/.mac-inventory")
 		return 1
 	}
 	log.Info("destination", "dir", dir)
 
 	collectedAt := time.Now()
-	found, appsErr := apps.Collect(runner.Exec{})
+	found, appsErr := apps.Collect(ctx, runner.Exec{})
 	if appsErr != nil {
 		log.Error("collecting applications", "err", appsErr)
 	}
-	pkgs, brewErr := brew.Collect(runner.Exec{})
+	pkgs, brewErr := brew.Collect(ctx, runner.Exec{})
 	if brewErr != nil {
 		log.Error("collecting brew packages", "err", brewErr)
 	}
@@ -84,12 +86,12 @@ func run(args []string, stderr io.Writer) int {
 	body := render.Markdown(inv, collectedAt)
 	complete := len(inv.Failures()) == 0
 	// A file open stuck on the macOS OneDrive permission prompt cannot be cancelled: warn and exit.
-	stopWatch := watchdog.Start(writeTimeout, onWriteTimeout(log, os.Exit))
+	stopWatch := watchdog.Start(writeTimeout, onWriteTimeout(ctx, log, os.Exit))
 	err = store.Write(dir, body, complete, collectedAt)
 	stopWatch()
 	if err != nil {
 		log.Error("writing inventory", "err", err)
-		warn(log, writeFailed+notify.Cause(err))
+		warn(ctx, log, writeFailed+notify.Cause(err))
 		return 1
 	}
 	log.Info("inventory written", "file", store.FileName)
@@ -97,10 +99,10 @@ func run(args []string, stderr io.Writer) int {
 }
 
 // onWriteTimeout is the watchdog action: log, show the warning, then leave with 1.
-func onWriteTimeout(log *slog.Logger, exit func(int)) func() {
+func onWriteTimeout(ctx context.Context, log *slog.Logger, exit func(int)) func() {
 	return func() {
 		log.Error("writing inventory", "err", "no answer after the deadline", "timeout", writeTimeout)
-		warn(log, writeTimeoutWarning())
+		warn(ctx, log, writeTimeoutWarning())
 		exit(1)
 	}
 }
@@ -117,8 +119,8 @@ func pathGiven(flags *flag.FlagSet, name string) bool {
 }
 
 // warn shows the notification; if it fails there is nothing left to do but log it.
-func warn(log *slog.Logger, cause string) {
-	if err := notify.Show(runner.Exec{}, "mac-inventory", cause); err != nil {
+func warn(ctx context.Context, log *slog.Logger, cause string) {
+	if err := notify.Show(ctx, runner.Exec{}, "mac-inventory", cause); err != nil {
 		log.Error("showing notification", "err", err)
 	}
 }

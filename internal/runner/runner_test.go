@@ -7,7 +7,7 @@ import (
 )
 
 func TestExecReturnsStandardOutput(t *testing.T) {
-	got, err := runner.Exec{}.Run("go", "version")
+	got, err := runner.Exec{}.Run(t.Context(), "go", "version")
 
 	if err != nil || len(got) == 0 {
 		t.Errorf("got %q, %v; want the command output", got, err)
@@ -15,7 +15,7 @@ func TestExecReturnsStandardOutput(t *testing.T) {
 }
 
 func TestExecFailsOnMissingCommand(t *testing.T) {
-	if _, err := (runner.Exec{}).Run("mac-inventory-no-such-command"); err == nil {
+	if _, err := (runner.Exec{}).Run(t.Context(), "mac-inventory-no-such-command"); err == nil {
 		t.Error("want an error for a missing command")
 	}
 }

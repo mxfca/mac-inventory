@@ -2,6 +2,7 @@
 package apps
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
@@ -28,8 +29,8 @@ type report struct {
 }
 
 // Collect returns the applications in /Applications, without the ones that ship with macOS.
-func Collect(r runner.Runner) ([]App, error) {
-	out, err := r.Run("system_profiler", "SPApplicationsDataType", "-json")
+func Collect(ctx context.Context, r runner.Runner) ([]App, error) {
+	out, err := r.Run(ctx, "system_profiler", "SPApplicationsDataType", "-json")
 	if err != nil {
 		return nil, err
 	}

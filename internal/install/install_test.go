@@ -64,7 +64,7 @@ func install(t *testing.T, config *string, answer string, setup ...func(home str
 		f(home)
 	}
 
-	cmd := exec.Command("/bin/sh", script) //nolint:gosec // script path is fixed by the repo layout
+	cmd := exec.CommandContext(t.Context(), "/bin/sh", script) //nolint:gosec // script path is fixed by the repo layout
 	cmd.Env = []string{"HOME=" + home, "PATH=" + bin + ":/usr/bin:/bin", "STUB_LOG=" + log}
 	cmd.Stdin = strings.NewReader(answer + "\n")
 	var stdout, stderr bytes.Buffer
@@ -116,6 +116,12 @@ func TestFirstInstallAsksWritesPrivateConfigAndInstalls(t *testing.T) {
 	if strings.Contains(r.stdout, "invalid") {
 		t.Errorf("stdout %q warns about a config that did not exist", r.stdout)
 	}
+	checkPrivateConfig(t, r, dest)
+}
+
+// checkPrivateConfig asserts the config holds dest and is readable only by its owner.
+func checkPrivateConfig(t *testing.T, r result, dest string) {
+	t.Helper()
 	if got, _ := os.ReadFile(r.configFile()); string(got) != dest+"\n" {
 		t.Errorf("config = %q, want %q", got, dest+"\n")
 	}
@@ -168,13 +174,7 @@ func TestInvalidConfigWarnsAsksAndRepairs(t *testing.T) {
 			if !strings.Contains(r.stdout, tc.reason) {
 				t.Errorf("stdout %q has no warning about %q", r.stdout, tc.reason)
 			}
-			if got, _ := os.ReadFile(r.configFile()); string(got) != dest+"\n" {
-				t.Errorf("config = %q, want %q", got, dest+"\n")
-			}
-			info, err := os.Stat(r.configFile())
-			if err != nil || info.Mode().Perm() != 0o600 {
-				t.Errorf("config mode %v (err %v), want 0600", info.Mode().Perm(), err)
-			}
+			checkPrivateConfig(t, r, dest)
 		})
 	}
 }
