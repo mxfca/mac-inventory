@@ -13,4 +13,9 @@ linters:
 
 formatters:
   enable:
-    - gofmt
+    - goimports
+  settings:
+    goimports:
+      # Imports of this module go in their own group, after the standard library and dependencies.
+      local-prefixes:
+        - github.com/mxfca/mac-inventory
